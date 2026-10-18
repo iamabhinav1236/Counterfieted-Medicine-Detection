@@ -1,0 +1,23 @@
+services:
+  truedose:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5000
+      FLASK_DEBUG: 0
+      ENVIRONMENT: production
+      TRUEDOSE_DB_PATH: /data/truedose.db
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - truedose-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  truedose-data:

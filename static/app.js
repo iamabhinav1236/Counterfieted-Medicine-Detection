@@ -9,14 +9,13 @@ let ipcamScanBusy = false;
 function showView(name) {
   views.forEach(v => $("view-" + v).classList.toggle("hidden", v !== name));
   document.querySelectorAll(".nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.view === name));
-  const titles = {overview:"Verification overview", verify:"Verify a medicine", registry:"Demo medicine registry", "qr-tools":"QR code tools"};
+  const titles = {overview:"Verification overview", verify:"Verify a medicine", registry:"Medicine registry", "qr-tools":"QR code tools"};
   $("page-title").textContent = titles[name] || "TrueDose AI";
   if (name === "registry") loadRegistry();
 }
 
 document.querySelectorAll(".nav-item").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
 $("hero-verify").addEventListener("click", () => { showView("verify"); $("medicine-code-secondary").focus(); });
-document.querySelectorAll("[data-code]").forEach(btn => btn.addEventListener("click", () => verifyCode(btn.dataset.code, "result-box")));
 $("refresh-btn").addEventListener("click", refreshDashboard);
 $("registry-refresh").addEventListener("click", loadRegistry);
 $("verify-form").addEventListener("submit", e => { e.preventDefault(); verifyCode($("medicine-code").value, "result-box"); });
@@ -34,7 +33,7 @@ function escapeHtml(value) {
 function statusClass(result) {
   if (result === "REGISTERED RECORD") return "pill-good";
   if (result === "EXPIRED BATCH" || result === "REVIEW REPEATED SCANS") return "pill-warn";
-  if (result === "SUSPICIOUS" || result === "UNKNOWN CODE") return "pill-bad";
+  if (["SUSPICIOUS", "UNKNOWN CODE", "RECALLED PRODUCT", "REGISTRY SUSPENDED"].includes(result)) return "pill-bad";
   return "pill-neutral";
 }
 function renderResult(data, targetId) {
@@ -43,8 +42,10 @@ function renderResult(data, targetId) {
   target.classList.remove("hidden");
   target.innerHTML = `
     <div class="result-top"><div><div class="result-title">${escapeHtml(data.result)}</div><span class="status-pill ${statusClass(data.result)}">${escapeHtml(data.result)}</span></div>
-    <div style="text-align:right"><div class="risk-number">${Number(data.risk_score)}<span style="font-size:11px;color:#8a999d">/100</span></div><div class="risk-label">DEMO RISK SCORE</div></div></div>
+    <div style="text-align:right"><div class="risk-number">${Number(data.risk_score)}<span style="font-size:11px;color:#8a999d">/100</span></div><div class="risk-label">RISK SCORE</div></div></div>
     <p class="result-reason">${escapeHtml(data.reason)}</p>
+    <div class="risk-explainer"><div class="risk-explainer-head"><b>Explainable risk signals</b><span class="risk-level risk-${String(data.risk_level || "LOW").toLowerCase()}">${escapeHtml(data.risk_level || "LOW")} RISK</span></div>
+    ${(data.signals || []).map(signal => `<div class="risk-signal"><span class="signal-dot signal-${escapeHtml(signal.level)}"></span><div><b>${escapeHtml(signal.title)}</b><small>${escapeHtml(signal.detail)}</small></div></div>`).join("")}</div>
     ${m.name ? `<div class="result-fields"><div><span>Medicine</span><b>${escapeHtml(m.name)}</b></div><div><span>Manufacturer</span><b>${escapeHtml(m.manufacturer)}</b></div><div><span>Batch</span><b>${escapeHtml(m.batch)}</b></div><div><span>Recorded expiry</span><b>${escapeHtml(m.expiry)}</b></div></div>` : ""}
     <div class="result-disclaimer">${escapeHtml(data.disclaimer)}</div>`;
 }
@@ -77,7 +78,7 @@ async function refreshDashboard() {
     $("metric-scans").textContent = data.total_scans;
     $("metric-flagged").textContent = data.flagged_scans;
     const recent = $("recent-scans");
-    if (!data.recent_scans.length) recent.innerHTML = '<div class="empty-state">No scans yet. Verify a sample code to see activity here.</div>';
+    if (!data.recent_scans.length) recent.innerHTML = '<div class="empty-state">No verification activity yet. Enter a code or scan a QR label to begin.</div>';
     else recent.innerHTML = data.recent_scans.map(s => `<div class="scan-row"><div class="scan-symbol">⌕</div><div class="scan-info"><b>${escapeHtml(s.code)}</b><small>${escapeHtml(s.scanned_at)} · Risk ${Number(s.risk_score)}/100</small></div><span class="status-pill ${statusClass(s.result)}">${escapeHtml(s.result)}</span></div>`).join("");
     setApiStatus(true);
   } catch (err) { setApiStatus(false); }
@@ -93,13 +94,23 @@ async function checkApiHealth() {
 }
 async function loadRegistry() {
   try {
-    const response = await fetch("/api/medicines"); if (!response.ok) throw new Error();
+    const response = await fetch("/api/medicines");
+    if (!response.ok) throw new Error("Registry unavailable");
     const rows = await response.json();
-    $("registry-body").innerHTML = rows.map(m => `<tr><td><b>${escapeHtml(m.code)}</b></td><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.manufacturer)}</td><td>${escapeHtml(m.batch)}</td><td>${escapeHtml(m.expiry)}</td><td><span class="status-pill ${m.status === "clone_demo" ? "pill-warn" : "pill-good"}">${m.status === "clone_demo" ? "Clone demo scenario" : "Sample record"}</span></td></tr>`).join("");
-  } catch (err) { $("registry-body").innerHTML = '<tr><td colspan="6">Could not load registry. Check the server.</td></tr>'; }
+    const statusLabel = status => status === "suspected_clone" ? "Suspected clone" : status.replaceAll("_", " ").replace(/^\w/, c => c.toUpperCase());
+    $("registry-body").innerHTML = rows.length ? rows.map(m => `<tr><td><b>${escapeHtml(m.code)}</b></td><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.manufacturer)}</td><td>${escapeHtml(m.batch)}</td><td>${escapeHtml(m.expiry)}</td><td><span class="status-pill ${["suspected_clone", "recalled", "suspended"].includes(m.status) ? "pill-warn" : "pill-good"}">${escapeHtml(statusLabel(m.status))}</span></td></tr>`).join("") : '<tr><td colspan="6">No medicine records are configured. Add records through Registry Admin.</td></tr>';
+    const select = $("qr-code-select");
+    select.innerHTML = rows.length ? rows.map(m => `<option value="${escapeHtml(m.code)}">${escapeHtml(m.code)} · ${escapeHtml(m.name)}</option>`).join("") : '<option value="">No registry records available</option>';
+    $("generate-qr-btn").disabled = rows.length === 0;
+    $("verify-selected-qr").disabled = rows.length === 0;
+  } catch (err) {
+    $("registry-body").innerHTML = '<tr><td colspan="6">Could not load registry. Check the server.</td></tr>';
+    $("qr-code-select").innerHTML = '<option value="">Registry unavailable</option>';
+  }
 }
 async function generateQr() {
   const code = $("qr-code-select").value;
+  if (!code) { toast("No medicine records are available. Add a record in Registry Admin first."); return; }
   const img = $("qr-preview");
   const placeholder = $("qr-placeholder");
   const download = $("download-qr");
@@ -111,7 +122,7 @@ async function generateQr() {
     if (img.dataset.objectUrl) URL.revokeObjectURL(img.dataset.objectUrl);
     img.dataset.objectUrl = url; img.src = url; img.classList.remove("hidden"); placeholder.classList.add("hidden");
     download.href = url; download.download = `truedose-${code.toLowerCase()}.png`; download.classList.remove("hidden");
-    toast("Demo QR code generated.");
+    toast("QR code generated.");
   } catch (err) { placeholder.textContent = err.message; placeholder.classList.remove("hidden"); img.classList.add("hidden"); download.classList.add("hidden"); }
 }
 async function startCameraScan() {
@@ -207,3 +218,4 @@ function toast(message) {
 }
 checkApiHealth();
 refreshDashboard();
+loadRegistry();
