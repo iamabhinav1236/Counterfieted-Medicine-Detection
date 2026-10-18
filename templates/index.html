@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrueDose AI | Medicine Verification</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-mark">✓</div>
+      <div class="brand-name">TrueDose <span>AI</span></div>
+      <p class="side-caption">Medicine verification</p>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav-item active" data-view="overview"><span>▦</span> Overview</button>
+      <button class="nav-item" data-view="verify"><span>⌕</span> Verify medicine</button>
+      <button class="nav-item" data-view="registry"><span>▤</span> Demo registry</button>
+      <div class="sidebar-bottom">
+        <div class="status-dot"></div>
+        <div><strong>Local demo mode</strong><small>Sample data only</small></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CODE SENTINELS / MEDTECH</p>
+          <h1 id="page-title">Verification overview</h1>
+        </div>
+        <div class="top-actions"><span class="connection"><i></i> API connected</span><span class="avatar">CS</span></div>
+      </header>
+
+      <section id="view-overview" class="view">
+        <div class="hero">
+          <div>
+            <div class="hero-tag">● TRUST, TRACEABILITY & SAFETY</div>
+            <h2>Verify a medicine.<br><em>Understand the risk.</em></h2>
+            <p>Check a demo medicine code against the local registry and review explainable warning signals.</p>
+            <button class="primary-btn" id="hero-verify">＋ Verify a medicine</button>
+          </div>
+          <div class="hero-graphic" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="shield">✓</div><div class="orbit-label">TRACEABLE<br><b>BY DESIGN</b></div>
+          </div>
+        </div>
+
+        <div class="section-heading"><div><h3>Live demo metrics</h3><p>Updates after each verification attempt.</p></div><span class="live-pill"><i></i> LIVE</span></div>
+        <div class="metrics">
+          <article class="metric-card"><div class="metric-icon teal">▤</div><p>Registry records</p><strong id="metric-medicines">—</strong><small>Sample medicine records</small></article>
+          <article class="metric-card"><div class="metric-icon blue">⌕</div><p>Total scans</p><strong id="metric-scans">—</strong><small>Verification attempts</small></article>
+          <article class="metric-card"><div class="metric-icon amber">⚑</div><p>Flagged attempts</p><strong id="metric-flagged">—</strong><small>Require further review</small></article>
+        </div>
+
+        <div class="content-grid">
+          <article class="panel">
+            <div class="panel-head"><div><h3>Quick verification</h3><p>Try one of the demo codes below.</p></div><span class="panel-icon">⌕</span></div>
+            <form id="verify-form" class="verify-form">
+              <label for="medicine-code">Medicine serial / QR code</label>
+              <div class="input-row"><input id="medicine-code" autocomplete="off" placeholder="e.g. TD-1001" required><button class="primary-btn" type="submit">Verify →</button></div>
+            </form>
+            <div class="sample-codes">
+              <button data-code="TD-1001"><span class="sample-dot good"></span><span><b>TD-1001</b><small>Registered sample</small></span><span class="sample-arrow">↗</span></button>
+              <button data-code="TD-EXPIRED-01"><span class="sample-dot warn"></span><span><b>TD-EXPIRED-01</b><small>Expired batch demo</small></span><span class="sample-arrow">↗</span></button>
+              <button data-code="TD-CLONE-1001"><span class="sample-dot bad"></span><span><b>TD-CLONE-1001</b><small>Cloned-code scenario</small></span><span class="sample-arrow">↗</span></button>
+              <button data-code="TD-NOT-FOUND"><span class="sample-dot unknown"></span><span><b>TD-NOT-FOUND</b><small>Unknown code demo</small></span><span class="sample-arrow">↗</span></button>
+            </div>
+            <div id="result-box" class="result-box hidden" aria-live="polite"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head"><div><h3>Recent verification activity</h3><p>Latest scans from this browser session and database.</p></div><button class="text-btn" id="refresh-btn">Refresh ↻</button></div>
+            <div id="recent-scans" class="recent-scans"><div class="empty-state">No scans yet. Verify a sample code to see activity here.</div></div>
+            <div class="panel-footer"><span class="legend-dot"></span> Results are based on simulated registry data</div>
+          </article>
+        </div>
+        <div class="notice"><span>ⓘ</span><div><b>Prototype safety notice</b><p>A registered code is not proof that a physical medicine pack is genuine. This demo uses simulated records and must not be used to make real medication decisions.</p></div></div>
+      </section>
+
+      <section id="view-verify" class="view hidden">
+        <div class="page-intro"><span class="kicker">MEDICINE CHECK</span><h2>Verify a medicine</h2><p>Enter a sample serial code to check its record and risk indicators.</p></div>
+        <article class="panel verify-large">
+          <form id="verify-form-secondary" class="verify-form">
+            <label for="medicine-code-secondary">Medicine serial / QR code</label>
+            <div class="input-row"><input id="medicine-code-secondary" placeholder="Enter code, e.g. TD-1001" required><button class="primary-btn" type="submit">Check code →</button></div>
+          </form>
+          <div id="result-box-secondary" class="result-box hidden" aria-live="polite"></div>
+          <div class="helper-card"><b>Demo codes</b><p>TD-1001 · TD-1002 · TD-EXPIRED-01 · TD-CLONE-1001 · TD-NOT-FOUND</p></div>
+        </article>
+      </section>
+
+      <section id="view-registry" class="view hidden">
+        <div class="page-intro"><span class="kicker">SAMPLE DATA</span><h2>Demo medicine registry</h2><p>These records are fictional examples used to demonstrate the verification workflow.</p></div>
+        <article class="panel">
+          <div class="panel-head"><div><h3>Registered sample records</h3><p>Source of truth for this prototype's code lookups.</p></div><button class="text-btn" id="registry-refresh">Reload ↻</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Code</th><th>Medicine</th><th>Manufacturer</th><th>Batch</th><th>Expiry</th><th>Demo status</th></tr></thead><tbody id="registry-body"><tr><td colspan="6">Loading records…</td></tr></tbody></table></div>
+        </article>
+      </section>
+
+      <footer><span>TrueDose AI · Code Sentinels</span><span>Hackathon prototype · Simulated data</span></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast hidden" role="status"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
