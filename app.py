@@ -3,6 +3,12 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
 from collections import Counter
+from io import BytesIO
+import qrcode
+from flask import send_file, Response
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+import ipaddress
 
 APP_DIR = Path(__file__).resolve().parent
 DB_PATH = APP_DIR / "truedose.db"
@@ -74,6 +80,79 @@ def stats():
         "flagged_scans": flagged,
         "recent_scans": [dict(row) for row in recent]
     })
+
+@app.get("/api/qr")
+def generate_qr():
+    """Generate a QR image for a demo registry code. The QR contains only the code."""
+    code = str(request.args.get("code", "")).strip().upper()
+    if not code:
+        return jsonify({"error": "Choose a medicine code first."}), 400
+    with connect_db() as conn:
+        medicine = conn.execute("SELECT code FROM medicines WHERE code = ?", (code,)).fetchone()
+    if not medicine:
+        return jsonify({"error": "That code is not in the demo registry."}), 404
+    image = qrcode.make(code)
+    output = BytesIO()
+    image.save(output, format="PNG")
+    output.seek(0)
+    return send_file(output, mimetype="image/png", download_name=f"truedose-{code.lower()}.png")
+
+@app.get("/api/ipcam/stream")
+def ipcam_stream():
+    """Proxy a private-LAN IP Webcam MJPEG stream so browser canvas QR scanning can read frames."""
+    stream_url = str(request.args.get("url", "")).strip()
+    parsed = urlparse(stream_url)
+    try:
+        host_ip = ipaddress.ip_address(parsed.hostname or "")
+    except ValueError:
+        return jsonify({"error": "Enter a valid phone IPv4 address, e.g. http://192.168.1.25:8080/video"}), 400
+    if not host_ip.is_private or parsed.scheme != "http" or parsed.username or parsed.password:
+        return jsonify({"error": "For safety, only an HTTP IP Webcam URL on your private Wi-Fi network is allowed."}), 400
+    if parsed.path.rstrip("/") not in ("/video", "/videofeed"):
+        return jsonify({"error": "Use the IP Webcam video stream path, usually /video."}), 400
+    port = parsed.port or 8080
+    if not (1 <= port <= 65535):
+        return jsonify({"error": "Invalid stream port."}), 400
+    safe_url = f"http://{host_ip.compressed}:{port}{parsed.path or '/video'}"
+
+    def generate():
+        upstream = None
+        try:
+            req = Request(safe_url, headers={"User-Agent": "TrueDose-AI-Demo/1.0"})
+            upstream = urlopen(req, timeout=8)
+            content_type = upstream.headers.get("Content-Type", "multipart/x-mixed-replace; boundary=--ipcamera")
+            # Forward the original MJPEG multipart bytes; browser receives them from this same-origin endpoint.
+            while True:
+                chunk = upstream.read(4096)
+                if not chunk:
+                    break
+                yield chunk
+        except Exception:
+            return
+        finally:
+            if upstream is not None:
+                upstream.close()
+
+    # Validate reachability before returning the streaming response, so connection errors are visible.
+    try:
+        req = Request(safe_url, headers={"User-Agent": "TrueDose-AI-Demo/1.0"})
+        upstream = urlopen(req, timeout=4)
+    except Exception as exc:
+        return jsonify({"error": f"Could not connect to the phone stream ({type(exc).__name__}). Check the IP, port, Wi-Fi, and IP Webcam app."}), 502
+
+    content_type = upstream.headers.get("Content-Type", "multipart/x-mixed-replace; boundary=--ipcamera")
+    def relay():
+        try:
+            while True:
+                chunk = upstream.read(4096)
+                if not chunk:
+                    break
+                yield chunk
+        except Exception:
+            pass
+        finally:
+            upstream.close()
+    return Response(relay(), content_type=content_type, headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 @app.get("/api/medicines")
 def medicines():

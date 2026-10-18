@@ -47,3 +47,25 @@ button:focus-visible{outline:3px solid rgba(11,155,142,.25);outline-offset:2px}
 @media(max-width:1000px){.hero{min-height:230px}.hero h2{font-size:28px}.metric-card{padding:16px}}
 @media(max-width:700px){.sidebar{position:fixed;z-index:10;left:0;top:0;height:100dvh;box-shadow:6px 0 24px rgba(20,58,63,.07)}.main{margin-left:66px;padding:0 12px}.topbar h1{font-size:16px}.hero{border-radius:13px}.hero h2{font-size:23px}.metric-card{border-radius:10px}.metric-card strong{font-size:20px}.panel{padding:14px}.notice{align-items:flex-start}.main footer{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* QR tools */
+.field-label{display:block;font-size:11px;font-weight:700;margin-bottom:8px}
+.qr-select-row{align-items:stretch}
+.qr-select-row select{min-width:0;flex:1;border:1px solid #dce6e8;border-radius:8px;padding:11px;background:#fff;color:var(--ink);font:12px 'DM Sans'}
+.qr-preview-wrap{min-height:235px;margin-top:18px;border:1px dashed #d6e5e4;border-radius:12px;background:#fbfdfd;display:flex;align-items:center;justify-content:center;padding:18px}
+.qr-preview{width:220px;height:220px;object-fit:contain;image-rendering:pixelated;background:#fff;padding:8px;border:1px solid var(--line);border-radius:8px}
+.qr-actions,.scanner-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:13px}
+.qr-actions a{ text-decoration:none }
+.small-note{font-size:10px;color:var(--muted);line-height:1.6;margin:12px 0 0}
+.scanner-frame{min-height:235px;border-radius:12px;background:#102f35;overflow:hidden;position:relative;display:grid;place-items:center}
+.scanner-frame video{width:100%;max-height:310px;object-fit:cover}
+.scanner-placeholder{color:#cce3df;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:25px}
+.scanner-placeholder span{font-size:42px;color:#8ad6c5}
+.scanner-placeholder b{font:700 13px Manrope;color:#fff}
+.scanner-placeholder small{font-size:10px;line-height:1.6;max-width:260px;color:#b6d0cc}
+.secondary-btn{background:#fff;border:1px solid #dce6e8;color:#60767b;border-radius:8px;padding:11px 15px;font:700 12px 'DM Sans';cursor:pointer}
+.secondary-btn:disabled{opacity:.45;cursor:not-allowed}
+.qr-grid{align-items:start}
+@media(max-width:700px){.qr-select-row select{flex-basis:100%;min-height:42px}.qr-preview-wrap,.scanner-frame{min-height:200px}.qr-preview{width:180px;height:180px}}
+
+.ipcam-connect{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:8px}.ipcam-connect small{font-size:11px;color:var(--muted);line-height:1.5}.ipcam-connect input{min-width:0;flex:1}.scanner-frame img{display:block;width:100%;max-height:340px;object-fit:contain;background:#102f35}.scanner-frame canvas{display:none}

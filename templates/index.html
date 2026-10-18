@@ -16,6 +16,7 @@
       <button class="nav-item active" data-view="overview"><span>▦</span> Overview</button>
       <button class="nav-item" data-view="verify"><span>⌕</span> Verify medicine</button>
       <button class="nav-item" data-view="registry"><span>▤</span> Demo registry</button>
+      <button class="nav-item" data-view="qr-tools"><span>▦</span> QR tools</button>
       <div class="sidebar-bottom">
         <div class="status-dot"></div>
         <div><strong>Local demo mode</strong><small>Sample data only</small></div>
@@ -89,6 +90,29 @@
         </article>
       </section>
 
+      <section id="view-qr-tools" class="view hidden">
+        <div class="page-intro"><span class="kicker">SCAN & VERIFY</span><h2>QR code tools</h2><p>Generate a QR code for a fictional demo medicine, or scan one with your device camera to send its code for verification.</p></div>
+        <div class="content-grid qr-grid">
+          <article class="panel">
+            <div class="panel-head"><div><h3>Generate a demo QR</h3><p>Choose a sample record to create a downloadable QR image.</p></div><span class="panel-icon">▦</span></div>
+            <label for="qr-code-select" class="field-label">Medicine record</label>
+            <div class="input-row qr-select-row"><select id="qr-code-select"><option value="TD-1001">TD-1001 · Paracetamol 500 mg</option><option value="TD-1002">TD-1002 · Cetirizine 10 mg</option><option value="TD-EXPIRED-01">TD-EXPIRED-01 · Expired demo</option><option value="TD-CLONE-1001">TD-CLONE-1001 · Clone scenario</option></select><button class="primary-btn" id="generate-qr-btn" type="button">Generate QR</button></div>
+            <div class="qr-preview-wrap"><img id="qr-preview" alt="Generated demo medicine QR code" class="qr-preview hidden"><p id="qr-placeholder" class="empty-state">Choose a record and generate its QR code.</p></div>
+            <div class="qr-actions"><a id="download-qr" class="text-btn hidden" download="truedose-demo-qr.png">Download QR image ↓</a><button id="verify-selected-qr" class="text-btn" type="button">Verify selected code →</button></div>
+            <p class="small-note">The QR contains only the demo serial code. It is not cryptographic proof of authenticity.</p>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><div><h3>Scan with camera</h3><p>Allow camera access, then point it at a TrueDose demo QR.</p></div><span class="panel-icon">⌕</span></div>
+            <div class="scanner-frame"><video id="qr-video" playsinline muted class="hidden"></video><img id="ipcam-image" alt="Mobile IP Webcam stream" class="hidden"><canvas id="ipcam-canvas" class="hidden"></canvas><div id="scanner-placeholder" class="scanner-placeholder"><span>▦</span><b>Camera scanner</b><small>Use this device's camera or connect your phone's IP Webcam stream over the same Wi-Fi.</small></div></div>
+            <div class="scanner-actions"><button class="primary-btn" id="start-scan-btn" type="button">Use this device's camera</button><button class="secondary-btn" id="stop-scan-btn" type="button" disabled>Stop camera</button></div>
+            <div class="ipcam-connect"><label for="ipcam-url" class="field-label">Connect mobile with IP Webcam</label><div class="input-row"><input id="ipcam-url" type="url" inputmode="url" placeholder="http://192.168.1.25:8080/video" value="http://192.168.1.25:8080/video"><button class="primary-btn" id="connect-ipcam-btn" type="button">Connect phone</button></div><small>Replace the example IP with the address shown in the IP Webcam Android app. Phone and computer must be on the same Wi-Fi.</small></div>
+            <p id="scanner-status" class="small-note" role="status">Camera is off. You can also enter a code manually in Verify Medicine.</p>
+            <div id="qr-scan-result" class="result-box hidden" aria-live="polite"></div>
+          </article>
+        </div>
+        <div class="notice"><span>ⓘ</span><div><b>Prototype safety notice</b><p>QR codes can be copied or replaced. This scanner only reads a code and checks fictional local demo data; it cannot confirm the physical pack is genuine.</p></div></div>
+      </section>
+
       <section id="view-registry" class="view hidden">
         <div class="page-intro"><span class="kicker">SAMPLE DATA</span><h2>Demo medicine registry</h2><p>These records are fictional examples used to demonstrate the verification workflow.</p></div>
         <article class="panel">
@@ -101,6 +125,7 @@
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
