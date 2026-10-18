@@ -47,7 +47,6 @@ button:focus-visible{outline:3px solid rgba(11,155,142,.25);outline-offset:2px}
 @media(max-width:1000px){.hero{min-height:230px}.hero h2{font-size:28px}.metric-card{padding:16px}}
 @media(max-width:700px){.sidebar{position:fixed;z-index:10;left:0;top:0;height:100dvh;box-shadow:6px 0 24px rgba(20,58,63,.07)}.main{margin-left:66px;padding:0 12px}.topbar h1{font-size:16px}.hero{border-radius:13px}.hero h2{font-size:23px}.metric-card{border-radius:10px}.metric-card strong{font-size:20px}.panel{padding:14px}.notice{align-items:flex-start}.main footer{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
-<<<<<<< HEAD
 
 /* QR tools */
 .field-label{display:block;font-size:11px;font-weight:700;margin-bottom:8px}
@@ -68,5 +67,5 @@ button:focus-visible{outline:3px solid rgba(11,155,142,.25);outline-offset:2px}
 .secondary-btn:disabled{opacity:.45;cursor:not-allowed}
 .qr-grid{align-items:start}
 @media(max-width:700px){.qr-select-row select{flex-basis:100%;min-height:42px}.qr-preview-wrap,.scanner-frame{min-height:200px}.qr-preview{width:180px;height:180px}}
-=======
->>>>>>> d3ce6b5ddfe5486f10721186b6324e8b4d690f1b
+
+.ipcam-connect{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:8px}.ipcam-connect small{font-size:11px;color:var(--muted);line-height:1.5}.ipcam-connect input{min-width:0;flex:1}.scanner-frame img{display:block;width:100%;max-height:340px;object-fit:contain;background:#102f35}.scanner-frame canvas{display:none}

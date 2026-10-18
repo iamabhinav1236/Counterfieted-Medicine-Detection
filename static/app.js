@@ -3,6 +3,8 @@ const views = ["overview", "verify", "registry", "qr-tools"];
 let cameraStream = null;
 let scanLoopActive = false;
 let qrDetector = null;
+let ipcamMode = false;
+let ipcamScanBusy = false;
 
 function showView(name) {
   views.forEach(v => $("view-" + v).classList.toggle("hidden", v !== name));
@@ -23,6 +25,7 @@ $("generate-qr-btn").addEventListener("click", generateQr);
 $("verify-selected-qr").addEventListener("click", () => verifyCode($("qr-code-select").value, "qr-scan-result"));
 $("start-scan-btn").addEventListener("click", startCameraScan);
 $("stop-scan-btn").addEventListener("click", stopCameraScan);
+$("connect-ipcam-btn").addEventListener("click", connectIpWebcam);
 window.addEventListener("beforeunload", stopCameraScan);
 
 function escapeHtml(value) {
@@ -58,21 +61,7 @@ async function verifyCode(code, targetId) {
     renderResult(data, targetId);
     $("medicine-code").value = clean.toUpperCase();
     $("medicine-code-secondary").value = clean.toUpperCase();
-    await async function checkApiHealth() {
-  const badge = document.querySelector(".connection");
-  try {
-    const response = await fetch("/api/health", {cache: "no-store"});
-    if (!response.ok) throw new Error("Health check failed");
-    const data = await response.json();
-    badge.innerHTML = '<i></i> API connected';
-    badge.title = data.status ? `Server status: ${data.status}` : "API is responding";
-  } catch (err) {
-    badge.innerHTML = '<i style="background:#d65e5e"></i> API disconnected';
-    badge.title = "Could not reach the local API";
-  }
-}
-checkApiHealth();
-refreshDashboard();
+    await refreshDashboard();
     toast("Verification result updated.");
   } catch (err) {
     target.innerHTML = `<p class="result-reason">${escapeHtml(err.message)} Check that the Flask server is running.</p>`;
@@ -126,42 +115,89 @@ async function generateQr() {
   } catch (err) { placeholder.textContent = err.message; placeholder.classList.remove("hidden"); img.classList.add("hidden"); download.classList.add("hidden"); }
 }
 async function startCameraScan() {
+  stopCameraScan();
+  ipcamMode = false;
   const status = $("scanner-status");
-  if (!navigator.mediaDevices?.getUserMedia) { status.textContent = "Camera access is unavailable in this browser. Use localhost in a recent Chrome or Edge browser, or enter the code manually."; return; }
-  if (!("BarcodeDetector" in window)) { status.textContent = "This browser does not support built-in QR detection. Try an up-to-date Chrome or Edge browser, or use manual code entry."; return; }
+  if (!navigator.mediaDevices?.getUserMedia) { status.textContent = "Camera access is unavailable in this browser. Use the phone IP Webcam option below or enter the code manually."; return; }
+  if (!("BarcodeDetector" in window)) { status.textContent = "This browser does not support built-in QR detection. Use the phone IP Webcam option below, or try Chrome/Edge."; return; }
   try {
     qrDetector = new BarcodeDetector({formats:["qr_code"]});
     cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}, audio:false});
-    const video = $("qr-video"); video.srcObject = cameraStream; video.classList.remove("hidden"); $("scanner-placeholder").classList.add("hidden");
-    await video.play(); scanLoopActive = true; $("start-scan-btn").disabled = true; $("stop-scan-btn").disabled = false;
-    status.textContent = "Camera is running. Point it at a generated TrueDose QR code.";
+    const video = $("qr-video"); video.srcObject = cameraStream; video.classList.remove("hidden"); $("ipcam-image").classList.add("hidden"); $("scanner-placeholder").classList.add("hidden");
+    await video.play(); scanLoopActive = true; $("start-scan-btn").disabled = true; $("connect-ipcam-btn").disabled = true; $("stop-scan-btn").disabled = false;
+    status.textContent = "This device's camera is running. Point it at a generated TrueDose QR code.";
     scanFrame();
   } catch (err) { status.textContent = `Could not start camera: ${err.message}. Check browser camera permissions.`; stopCameraScan(); }
 }
+async function connectIpWebcam() {
+  stopCameraScan();
+  const status = $("scanner-status");
+  const entered = $("ipcam-url").value.trim();
+  let parsed;
+  try { parsed = new URL(entered); } catch { status.textContent = "Enter the IP Webcam stream URL shown in the Android app, e.g. http://192.168.1.25:8080/video"; return; }
+  if (parsed.protocol !== "http:" || !parsed.hostname || !/^\d{1,3}(\.\d{1,3}){3}$/.test(parsed.hostname)) {
+    status.textContent = "Enter the phone's local IPv4 URL, e.g. http://192.168.1.25:8080/video"; return;
+  }
+  if (!parsed.pathname || parsed.pathname === "/") parsed.pathname = "/video";
+  const proxyUrl = `/api/ipcam/stream?url=${encodeURIComponent(parsed.toString())}`;
+  const img = $("ipcam-image");
+  status.textContent = "Connecting to phone webcam… make sure IP Webcam is streaming and both devices use the same Wi-Fi.";
+  img.onload = () => {
+    ipcamMode = true; scanLoopActive = true; img.classList.remove("hidden"); $("qr-video").classList.add("hidden"); $("scanner-placeholder").classList.add("hidden");
+    $("start-scan-btn").disabled = true; $("connect-ipcam-btn").disabled = true; $("stop-scan-btn").disabled = false;
+    status.textContent = "Phone webcam connected. Hold a TrueDose QR code in front of your phone camera.";
+    scanIpWebcamFrame();
+  };
+  img.onerror = () => { status.textContent = "Could not load the phone stream. Check the IP address, /video path, IP Webcam app, and Wi-Fi network."; stopCameraScan(); };
+  img.src = proxyUrl;
+}
+function scanIpWebcamFrame() {
+  if (!scanLoopActive || !ipcamMode || ipcamScanBusy) { if (scanLoopActive && ipcamMode) requestAnimationFrame(scanIpWebcamFrame); return; }
+  const img = $("ipcam-image"), canvas = $("ipcam-canvas");
+  if (img.complete && img.naturalWidth > 0 && typeof window.jsQR === "function") {
+    ipcamScanBusy = true;
+    try {
+      const width = Math.min(img.naturalWidth, 960);
+      const height = Math.max(1, Math.round(img.naturalHeight * width / img.naturalWidth));
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d", {willReadFrequently:true});
+      ctx.drawImage(img, 0, 0, width, height);
+      const frame = ctx.getImageData(0, 0, width, height);
+      const code = window.jsQR(frame.data, frame.width, frame.height, {inversionAttempts:"attemptBoth"});
+      if (code?.data) {
+        const raw = code.data.trim(); stopCameraScan();
+        $("scanner-status").textContent = `QR read: ${raw}. Checking registry…`;
+        verifyCode(raw, "qr-scan-result"); return;
+      }
+    } catch (err) { /* Wait for the next frame. */ }
+    finally { ipcamScanBusy = false; }
+  }
+  if (scanLoopActive && ipcamMode) setTimeout(scanIpWebcamFrame, 150);
+}
 async function scanFrame() {
-  if (!scanLoopActive) return;
+  if (!scanLoopActive || ipcamMode) return;
   const video = $("qr-video");
   if (video.readyState >= 2) {
     try {
       const codes = await qrDetector.detect(video);
       if (codes.length && codes[0].rawValue) {
-        const raw = codes[0].rawValue.trim();
-        stopCameraScan();
+        const raw = codes[0].rawValue.trim(); stopCameraScan();
         $("scanner-status").textContent = `QR read: ${raw}. Checking registry…`;
-        await verifyCode(raw, "qr-scan-result");
-        return;
+        await verifyCode(raw, "qr-scan-result"); return;
       }
     } catch (err) { /* Continue scanning while the camera frame is not ready. */ }
   }
-  if (scanLoopActive) requestAnimationFrame(scanFrame);
+  if (scanLoopActive && !ipcamMode) requestAnimationFrame(scanFrame);
 }
 function stopCameraScan() {
-  scanLoopActive = false;
+  scanLoopActive = false; ipcamMode = false; ipcamScanBusy = false;
   if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; }
   const video = $("qr-video");
   if (video) { video.pause(); video.srcObject = null; video.classList.add("hidden"); }
+  const img = $("ipcam-image"); if (img) { img.onload = null; img.onerror = null; img.removeAttribute("src"); img.classList.add("hidden"); }
   const placeholder = $("scanner-placeholder"); if (placeholder) placeholder.classList.remove("hidden");
   if ($("start-scan-btn")) $("start-scan-btn").disabled = false;
+  if ($("connect-ipcam-btn")) $("connect-ipcam-btn").disabled = false;
   if ($("stop-scan-btn")) $("stop-scan-btn").disabled = true;
 }
 let toastTimeout;
@@ -169,21 +205,5 @@ function toast(message) {
   const t = $("toast"); t.textContent = message; t.classList.remove("hidden");
   clearTimeout(toastTimeout); toastTimeout = setTimeout(() => t.classList.add("hidden"), 2400);
 }
-<<<<<<< HEAD
-=======
-async function checkApiHealth() {
-  const badge = document.querySelector(".connection");
-  try {
-    const response = await fetch("/api/health", {cache: "no-store"});
-    if (!response.ok) throw new Error("Health check failed");
-    const data = await response.json();
-    badge.innerHTML = '<i></i> API connected';
-    badge.title = data.status ? `Server status: ${data.status}` : "API is responding";
-  } catch (err) {
-    badge.innerHTML = '<i style="background:#d65e5e"></i> API disconnected';
-    badge.title = "Could not reach the local API";
-  }
-}
->>>>>>> d3ce6b5ddfe5486f10721186b6324e8b4d690f1b
 checkApiHealth();
 refreshDashboard();

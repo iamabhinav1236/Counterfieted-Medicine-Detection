@@ -103,8 +103,9 @@
           </article>
           <article class="panel">
             <div class="panel-head"><div><h3>Scan with camera</h3><p>Allow camera access, then point it at a TrueDose demo QR.</p></div><span class="panel-icon">⌕</span></div>
-            <div class="scanner-frame"><video id="qr-video" playsinline muted class="hidden"></video><div id="scanner-placeholder" class="scanner-placeholder"><span>▦</span><b>Camera scanner</b><small>Requires browser camera permission and QR detection support.</small></div></div>
-            <div class="scanner-actions"><button class="primary-btn" id="start-scan-btn" type="button">Start camera</button><button class="secondary-btn" id="stop-scan-btn" type="button" disabled>Stop camera</button></div>
+            <div class="scanner-frame"><video id="qr-video" playsinline muted class="hidden"></video><img id="ipcam-image" alt="Mobile IP Webcam stream" class="hidden"><canvas id="ipcam-canvas" class="hidden"></canvas><div id="scanner-placeholder" class="scanner-placeholder"><span>▦</span><b>Camera scanner</b><small>Use this device's camera or connect your phone's IP Webcam stream over the same Wi-Fi.</small></div></div>
+            <div class="scanner-actions"><button class="primary-btn" id="start-scan-btn" type="button">Use this device's camera</button><button class="secondary-btn" id="stop-scan-btn" type="button" disabled>Stop camera</button></div>
+            <div class="ipcam-connect"><label for="ipcam-url" class="field-label">Connect mobile with IP Webcam</label><div class="input-row"><input id="ipcam-url" type="url" inputmode="url" placeholder="http://192.168.1.25:8080/video" value="http://192.168.1.25:8080/video"><button class="primary-btn" id="connect-ipcam-btn" type="button">Connect phone</button></div><small>Replace the example IP with the address shown in the IP Webcam Android app. Phone and computer must be on the same Wi-Fi.</small></div>
             <p id="scanner-status" class="small-note" role="status">Camera is off. You can also enter a code manually in Verify Medicine.</p>
             <div id="qr-scan-result" class="result-box hidden" aria-live="polite"></div>
           </article>
@@ -124,6 +125,7 @@
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
