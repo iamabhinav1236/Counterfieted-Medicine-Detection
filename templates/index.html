@@ -15,21 +15,26 @@
       <div class="side-label">WORKSPACE</div>
       <button class="nav-item active" data-view="overview"><span>▦</span> Overview</button>
       <button class="nav-item" data-view="verify"><span>⌕</span> Verify medicine</button>
-      <button class="nav-item" data-view="registry"><span>▤</span> Demo registry</button>
+      <button class="nav-item" data-view="registry"><span>▤</span> Medicine registry</button>
       <button class="nav-item" data-view="qr-tools"><span>▦</span> QR tools</button>
+      <a class="nav-item" href="/login" style="text-decoration:none"><span>♙</span> Sign in to dashboard</a>
+      <a class="nav-item" href="/register" style="text-decoration:none"><span>＋</span> Create account</a>
+      <a class="nav-item" href="/ledger" style="text-decoration:none"><span>⛓</span> Traceability ledger</a>
+      <a class="nav-item" href="/history" style="text-decoration:none"><span>◷</span> Verification history</a>
+      <a class="nav-item" href="/admin" style="text-decoration:none"><span>⚙</span> Registry admin</a>
       <div class="sidebar-bottom">
         <div class="status-dot"></div>
-        <div><strong>Local demo mode</strong><small>Sample data only</small></div>
+        <div><strong>Registry workspace</strong><small>Manage registered records</small></div>
       </div>
     </aside>
 
     <main class="main">
       <header class="topbar">
         <div>
-          <p class="eyebrow">CODE SENTINELS / MEDTECH</p>
+          <p class="eyebrow">MEDICINE SAFETY & TRACEABILITY</p>
           <h1 id="page-title">Verification overview</h1>
         </div>
-        <div class="top-actions"><span class="connection"><i></i> API connected</span><span class="avatar">CS</span></div>
+        <div class="top-actions"><span class="connection"><i></i> API connected</span><a class="avatar" href="/login" title="Account workspace" style="text-decoration:none;color:inherit">TD</a></div>
       </header>
 
       <section id="view-overview" class="view">
@@ -37,7 +42,7 @@
           <div>
             <div class="hero-tag">● TRUST, TRACEABILITY & SAFETY</div>
             <h2>Verify a medicine.<br><em>Understand the risk.</em></h2>
-            <p>Check a demo medicine code against the local registry and review explainable warning signals.</p>
+            <p>Check a medicine code against the configured registry and review explainable warning signals.</p>
             <button class="primary-btn" id="hero-verify">＋ Verify a medicine</button>
           </div>
           <div class="hero-graphic" aria-hidden="true">
@@ -46,63 +51,58 @@
           </div>
         </div>
 
-        <div class="section-heading"><div><h3>Live demo metrics</h3><p>Updates after each verification attempt.</p></div><span class="live-pill"><i></i> LIVE</span></div>
+        <div class="section-heading"><div><h3>Live verification metrics</h3><p>Updates after each verification attempt.</p></div><span class="live-pill"><i></i> LIVE</span></div>
         <div class="metrics">
-          <article class="metric-card"><div class="metric-icon teal">▤</div><p>Registry records</p><strong id="metric-medicines">—</strong><small>Sample medicine records</small></article>
+          <article class="metric-card"><div class="metric-icon teal">▤</div><p>Registry records</p><strong id="metric-medicines">—</strong><small>Configured registry entries</small></article>
           <article class="metric-card"><div class="metric-icon blue">⌕</div><p>Total scans</p><strong id="metric-scans">—</strong><small>Verification attempts</small></article>
           <article class="metric-card"><div class="metric-icon amber">⚑</div><p>Flagged attempts</p><strong id="metric-flagged">—</strong><small>Require further review</small></article>
         </div>
 
         <div class="content-grid">
           <article class="panel">
-            <div class="panel-head"><div><h3>Quick verification</h3><p>Try one of the demo codes below.</p></div><span class="panel-icon">⌕</span></div>
+            <div class="panel-head"><div><h3>Quick verification</h3><p>Enter a medicine code or scan its QR label.</p></div><span class="panel-icon">⌕</span></div>
             <form id="verify-form" class="verify-form">
               <label for="medicine-code">Medicine serial / QR code</label>
-              <div class="input-row"><input id="medicine-code" autocomplete="off" placeholder="e.g. TD-1001" required><button class="primary-btn" type="submit">Verify →</button></div>
+              <div class="input-row"><input id="medicine-code" autocomplete="off" placeholder="e.g. medicine serial code" required><button class="primary-btn" type="submit">Verify →</button></div>
             </form>
-            <div class="sample-codes">
-              <button data-code="TD-1001"><span class="sample-dot good"></span><span><b>TD-1001</b><small>Registered sample</small></span><span class="sample-arrow">↗</span></button>
-              <button data-code="TD-EXPIRED-01"><span class="sample-dot warn"></span><span><b>TD-EXPIRED-01</b><small>Expired batch demo</small></span><span class="sample-arrow">↗</span></button>
-              <button data-code="TD-CLONE-1001"><span class="sample-dot bad"></span><span><b>TD-CLONE-1001</b><small>Cloned-code scenario</small></span><span class="sample-arrow">↗</span></button>
-              <button data-code="TD-NOT-FOUND"><span class="sample-dot unknown"></span><span><b>TD-NOT-FOUND</b><small>Unknown code demo</small></span><span class="sample-arrow">↗</span></button>
-            </div>
+
             <div id="result-box" class="result-box hidden" aria-live="polite"></div>
           </article>
 
           <article class="panel">
             <div class="panel-head"><div><h3>Recent verification activity</h3><p>Latest scans from this browser session and database.</p></div><button class="text-btn" id="refresh-btn">Refresh ↻</button></div>
-            <div id="recent-scans" class="recent-scans"><div class="empty-state">No scans yet. Verify a sample code to see activity here.</div></div>
-            <div class="panel-footer"><span class="legend-dot"></span> Results are based on simulated registry data</div>
+            <div id="recent-scans" class="recent-scans"><div class="empty-state">No verification activity yet. Enter a code or scan a QR label to begin.</div></div>
+            <div class="panel-footer"><span class="legend-dot"></span> Results are based on configured registry data</div>
           </article>
         </div>
-        <div class="notice"><span>ⓘ</span><div><b>Prototype safety notice</b><p>A registered code is not proof that a physical medicine pack is genuine. This demo uses simulated records and must not be used to make real medication decisions.</p></div></div>
+        <div class="notice"><span>ⓘ</span><div><b>Verification limitation</b><p>A registry match does not independently prove that the physical medicine pack is genuine. Confirm product status with the manufacturer or relevant regulator; never rely on this result alone for medication decisions.</p></div></div>
       </section>
 
       <section id="view-verify" class="view hidden">
-        <div class="page-intro"><span class="kicker">MEDICINE CHECK</span><h2>Verify a medicine</h2><p>Enter a sample serial code to check its record and risk indicators.</p></div>
+        <div class="page-intro"><span class="kicker">MEDICINE CHECK</span><h2>Verify a medicine</h2><p>Enter a medicine serial code to check its registry record and risk indicators.</p></div>
         <article class="panel verify-large">
           <form id="verify-form-secondary" class="verify-form">
             <label for="medicine-code-secondary">Medicine serial / QR code</label>
-            <div class="input-row"><input id="medicine-code-secondary" placeholder="Enter code, e.g. TD-1001" required><button class="primary-btn" type="submit">Check code →</button></div>
+            <div class="input-row"><input id="medicine-code-secondary" placeholder="Enter code, e.g. medicine serial code" required><button class="primary-btn" type="submit">Check code →</button></div>
           </form>
           <div id="result-box-secondary" class="result-box hidden" aria-live="polite"></div>
-          <div class="helper-card"><b>Demo codes</b><p>TD-1001 · TD-1002 · TD-EXPIRED-01 · TD-CLONE-1001 · TD-NOT-FOUND</p></div>
+          <div class="helper-card"><b>Need a code?</b><p>Use the serial identifier printed on the medicine package, or scan its QR code. Registry records are managed by an authorized administrator.</p></div>
         </article>
       </section>
 
       <section id="view-qr-tools" class="view hidden">
-        <div class="page-intro"><span class="kicker">SCAN & VERIFY</span><h2>QR code tools</h2><p>Generate a QR code for a fictional demo medicine, or scan one with your device camera to send its code for verification.</p></div>
+        <div class="page-intro"><span class="kicker">SCAN & VERIFY</span><h2>QR code tools</h2><p>Generate a QR code for a medicine record in the registry, or scan a package QR code to check its identifier.</p></div>
         <div class="content-grid qr-grid">
           <article class="panel">
-            <div class="panel-head"><div><h3>Generate a demo QR</h3><p>Choose a sample record to create a downloadable QR image.</p></div><span class="panel-icon">▦</span></div>
+            <div class="panel-head"><div><h3>Generate a medicine QR</h3><p>Choose a registered record to create a downloadable QR image.</p></div><span class="panel-icon">▦</span></div>
             <label for="qr-code-select" class="field-label">Medicine record</label>
-            <div class="input-row qr-select-row"><select id="qr-code-select"><option value="TD-1001">TD-1001 · Paracetamol 500 mg</option><option value="TD-1002">TD-1002 · Cetirizine 10 mg</option><option value="TD-EXPIRED-01">TD-EXPIRED-01 · Expired demo</option><option value="TD-CLONE-1001">TD-CLONE-1001 · Clone scenario</option></select><button class="primary-btn" id="generate-qr-btn" type="button">Generate QR</button></div>
-            <div class="qr-preview-wrap"><img id="qr-preview" alt="Generated demo medicine QR code" class="qr-preview hidden"><p id="qr-placeholder" class="empty-state">Choose a record and generate its QR code.</p></div>
-            <div class="qr-actions"><a id="download-qr" class="text-btn hidden" download="truedose-demo-qr.png">Download QR image ↓</a><button id="verify-selected-qr" class="text-btn" type="button">Verify selected code →</button></div>
-            <p class="small-note">The QR contains only the demo serial code. It is not cryptographic proof of authenticity.</p>
+            <div class="input-row qr-select-row"><select id="qr-code-select"><option value="">Loading registry records…</option></select><button class="primary-btn" id="generate-qr-btn" type="button">Generate QR</button></div>
+            <div class="qr-preview-wrap"><img id="qr-preview" alt="Generated medicine QR code" class="qr-preview hidden"><p id="qr-placeholder" class="empty-state">Choose a record and generate its QR code.</p></div>
+            <div class="qr-actions"><a id="download-qr" class="text-btn hidden" download="truedose-qr.png">Download QR image ↓</a><button id="verify-selected-qr" class="text-btn" type="button">Verify selected code →</button></div>
+            <p class="small-note">The QR contains the selected serial code only. A QR code alone is not cryptographic proof of authenticity.</p>
           </article>
           <article class="panel">
-            <div class="panel-head"><div><h3>Scan with camera</h3><p>Allow camera access, then point it at a TrueDose demo QR.</p></div><span class="panel-icon">⌕</span></div>
+            <div class="panel-head"><div><h3>Scan with camera</h3><p>Allow camera access, then point it at a medicine QR label.</p></div><span class="panel-icon">⌕</span></div>
             <div class="scanner-frame"><video id="qr-video" playsinline muted class="hidden"></video><img id="ipcam-image" alt="Mobile IP Webcam stream" class="hidden"><canvas id="ipcam-canvas" class="hidden"></canvas><div id="scanner-placeholder" class="scanner-placeholder"><span>▦</span><b>Camera scanner</b><small>Use this device's camera or connect your phone's IP Webcam stream over the same Wi-Fi.</small></div></div>
             <div class="scanner-actions"><button class="primary-btn" id="start-scan-btn" type="button">Use this device's camera</button><button class="secondary-btn" id="stop-scan-btn" type="button" disabled>Stop camera</button></div>
             <div class="ipcam-connect"><label for="ipcam-url" class="field-label">Connect mobile with IP Webcam</label><div class="input-row"><input id="ipcam-url" type="url" inputmode="url" placeholder="http://192.168.1.25:8080/video" value="http://192.168.1.25:8080/video"><button class="primary-btn" id="connect-ipcam-btn" type="button">Connect phone</button></div><small>Replace the example IP with the address shown in the IP Webcam Android app. Phone and computer must be on the same Wi-Fi.</small></div>
@@ -110,18 +110,18 @@
             <div id="qr-scan-result" class="result-box hidden" aria-live="polite"></div>
           </article>
         </div>
-        <div class="notice"><span>ⓘ</span><div><b>Prototype safety notice</b><p>QR codes can be copied or replaced. This scanner only reads a code and checks fictional local demo data; it cannot confirm the physical pack is genuine.</p></div></div>
+        <div class="notice"><span>ⓘ</span><div><b>Verification limitation</b><p>QR codes can be copied or replaced. This scanner reads the code and checks the configured registry; it cannot independently confirm that the physical pack is genuine.</p></div></div>
       </section>
 
       <section id="view-registry" class="view hidden">
-        <div class="page-intro"><span class="kicker">SAMPLE DATA</span><h2>Demo medicine registry</h2><p>These records are fictional examples used to demonstrate the verification workflow.</p></div>
+        <div class="page-intro"><span class="kicker">REGISTRY</span><h2>Medicine registry</h2><p>Review medicine records currently configured in the registry.</p></div>
         <article class="panel">
-          <div class="panel-head"><div><h3>Registered sample records</h3><p>Source of truth for this prototype's code lookups.</p></div><button class="text-btn" id="registry-refresh">Reload ↻</button></div>
-          <div class="table-wrap"><table><thead><tr><th>Code</th><th>Medicine</th><th>Manufacturer</th><th>Batch</th><th>Expiry</th><th>Demo status</th></tr></thead><tbody id="registry-body"><tr><td colspan="6">Loading records…</td></tr></tbody></table></div>
+          <div class="panel-head"><div><h3>Registered medicine records</h3><p>Records used by the verification workflow.</p></div><button class="text-btn" id="registry-refresh">Reload ↻</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Code</th><th>Medicine</th><th>Manufacturer</th><th>Batch</th><th>Expiry</th><th>Registry status</th></tr></thead><tbody id="registry-body"><tr><td colspan="6">Loading records…</td></tr></tbody></table></div>
         </article>
       </section>
 
-      <footer><span>TrueDose AI · Code Sentinels</span><span>Hackathon prototype · Simulated data</span></footer>
+      <footer><span>TrueDose AI · Medicine verification</span><span>Registry-based risk assessment</span></footer>
     </main>
   </div>
   <div id="toast" class="toast hidden" role="status"></div>
