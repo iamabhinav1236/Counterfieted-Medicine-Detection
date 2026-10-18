@@ -46,20 +46,22 @@ Then open **http://127.0.0.1:5000**.
 - `TD-CLONE-1001` — simulated suspicious cloned-code scenario
 - `TD-NOT-FOUND` — unknown code
 
-Click a sample code on the dashboard or type it into the verification field. After each scan, the dashboard metrics and recent activity update.
+Click a sample code on the dashboard or type it into the verification field. After each scan, the dashboard metrics and recent activity update. Use **QR tools** to generate/download a QR image or scan one with a supported browser camera.
 
 ## API checks
 Open these URLs in your browser:
 - `http://127.0.0.1:5000/api/health` — server/database health
 - `http://127.0.0.1:5000/api/medicines` — sample registry
 - `http://127.0.0.1:5000/api/stats` — dashboard metrics
+- `http://127.0.0.1:5000/api/qr?code=TD-1001` — generated PNG QR code for a registered demo code
 
 ## Important limitations
 - This is a hackathon prototype, not a production medicine-authentication system.
 - Sample records are fictional and locally stored in SQLite.
 - A matching code does not prove the physical medicine pack is genuine.
 - The clone scenario is deliberately seeded demo data, not an ML model finding.
-- No real SMS, manufacturer integration, blockchain, or camera QR scanning is implemented in this first milestone.
+- QR images can be generated for fictional demo registry codes. Camera scanning uses the browser built-in `BarcodeDetector` API when supported (recent Chrome/Edge); other browsers can still use manual code entry.
+- No real SMS, manufacturer integration, blockchain, or machine-learning model is implemented.
 - Do not use this prototype to decide whether to take a real medicine.
 
 ## Troubleshooting

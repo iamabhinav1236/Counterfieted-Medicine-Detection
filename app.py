@@ -3,6 +3,9 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
 from collections import Counter
+from io import BytesIO
+import qrcode
+from flask import send_file
 
 APP_DIR = Path(__file__).resolve().parent
 DB_PATH = APP_DIR / "truedose.db"
@@ -74,6 +77,22 @@ def stats():
         "flagged_scans": flagged,
         "recent_scans": [dict(row) for row in recent]
     })
+
+@app.get("/api/qr")
+def generate_qr():
+    """Generate a QR image for a demo registry code. The QR contains only the code."""
+    code = str(request.args.get("code", "")).strip().upper()
+    if not code:
+        return jsonify({"error": "Choose a medicine code first."}), 400
+    with connect_db() as conn:
+        medicine = conn.execute("SELECT code FROM medicines WHERE code = ?", (code,)).fetchone()
+    if not medicine:
+        return jsonify({"error": "That code is not in the demo registry."}), 404
+    image = qrcode.make(code)
+    output = BytesIO()
+    image.save(output, format="PNG")
+    output.seek(0)
+    return send_file(output, mimetype="image/png", download_name=f"truedose-{code.lower()}.png")
 
 @app.get("/api/medicines")
 def medicines():
