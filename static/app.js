@@ -58,7 +58,21 @@ async function verifyCode(code, targetId) {
     renderResult(data, targetId);
     $("medicine-code").value = clean.toUpperCase();
     $("medicine-code-secondary").value = clean.toUpperCase();
-    await refreshDashboard();
+    await async function checkApiHealth() {
+  const badge = document.querySelector(".connection");
+  try {
+    const response = await fetch("/api/health", {cache: "no-store"});
+    if (!response.ok) throw new Error("Health check failed");
+    const data = await response.json();
+    badge.innerHTML = '<i></i> API connected';
+    badge.title = data.status ? `Server status: ${data.status}` : "API is responding";
+  } catch (err) {
+    badge.innerHTML = '<i style="background:#d65e5e"></i> API disconnected';
+    badge.title = "Could not reach the local API";
+  }
+}
+checkApiHealth();
+refreshDashboard();
     toast("Verification result updated.");
   } catch (err) {
     target.innerHTML = `<p class="result-reason">${escapeHtml(err.message)} Check that the Flask server is running.</p>`;
@@ -155,5 +169,21 @@ function toast(message) {
   const t = $("toast"); t.textContent = message; t.classList.remove("hidden");
   clearTimeout(toastTimeout); toastTimeout = setTimeout(() => t.classList.add("hidden"), 2400);
 }
+<<<<<<< HEAD
+=======
+async function checkApiHealth() {
+  const badge = document.querySelector(".connection");
+  try {
+    const response = await fetch("/api/health", {cache: "no-store"});
+    if (!response.ok) throw new Error("Health check failed");
+    const data = await response.json();
+    badge.innerHTML = '<i></i> API connected';
+    badge.title = data.status ? `Server status: ${data.status}` : "API is responding";
+  } catch (err) {
+    badge.innerHTML = '<i style="background:#d65e5e"></i> API disconnected';
+    badge.title = "Could not reach the local API";
+  }
+}
+>>>>>>> d3ce6b5ddfe5486f10721186b6324e8b4d690f1b
 checkApiHealth();
 refreshDashboard();
